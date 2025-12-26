@@ -1,7 +1,7 @@
 {
-    "product":"Mouse",
-    "price":"4500",
-    "store":"Sidswipe Gadgets",
-    "qty":60,
-    "isVerified":true
-}
+        "product": "Mouse",
+        "price": 8500,
+        "store": "Sidswipe Gadgets",
+        "quantity": 60,
+        "isStoreVerified": false
+    }

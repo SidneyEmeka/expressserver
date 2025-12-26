@@ -8,8 +8,6 @@ import bodyParser from 'body-parser'; //To take incoming post request bodies
 import productsRoutes from './routes/products.js';
 
 
-
-
 const app = express(); 
 const PORT = 2;
 
