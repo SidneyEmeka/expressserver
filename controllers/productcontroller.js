@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid' //to generate unique IDs
 
-//ALL Products
 
 let allProducts = [
     {
@@ -11,8 +10,10 @@ let allProducts = [
         isStoreVerified: false,
         productId: uuidv4()
     },
-]; //Just in memory database
+]; //Just in memory database for all products
 
+
+///VALIDATIONS
 const validKeys = ['product', 'price', 'store', 'quantity', 'isStoreVerified']
 
 function validateBodyParams(bodyTocheck) {
@@ -39,18 +40,47 @@ function checkMissingBodyParams(bodyToCheck) {
     return errors;
 }
 
+function checkTypeMatch(bodyToCheck) {
+    const errors = [];
+
+    if (bodyToCheck["product"] !== undefined && typeof bodyToCheck["product"] !== 'string') {
+        errors.push(`Product Must be a string`)
+    }
+    if (bodyToCheck["price"] !== undefined && typeof bodyToCheck["price"] !== 'number') {
+        errors.push(`Price Must be a number`)
+    }
+    if (bodyToCheck["store"] !== undefined && typeof bodyToCheck["store"] !== 'string') {
+        errors.push(`Store Must be a string`)
+    }
+    if (bodyToCheck["quantity"] !== undefined && typeof bodyToCheck["quantity"] !== 'number') {
+        errors.push(`Quantity Must be a number`)
+    }
+    if (bodyToCheck["isStoreVerified"] !== undefined && typeof bodyToCheck["isStoreVerified"] !== 'boolean') {
+        errors.push(`isStoreVerified Must be a boolean`)
+    }
+
+    return errors;
+}
+
+
+///CRUD
 export const getAllProducts = (req, res) => { res.send(allProducts); }
 
 export const addAProduct = (req, res) => {
 
-    const wrongParameters = validateBodyParams(req.body); //validate body
+    //validate the body
+    const wrongParameters = validateBodyParams(req.body);
     const missingParammeters = checkMissingBodyParams(req.body);
+    const typeMismatch = checkTypeMatch(req.body);
 
     if (wrongParameters.length > 0) {
         res.send(wrongParameters.join('\n'));
     }
     else if (missingParammeters.length > 0) {
         res.send(missingParammeters.join('\n'));
+    }
+    else if (typeMismatch.length > 0) {
+        res.send(typeMismatch.join('\n'));
     }
     else {
         let newProduct = { ...req.body, productId: uuidv4() }; //Using spread operator to include all static product details then a dynamic ID
@@ -97,14 +127,18 @@ export const updateAProduct = (req, res) => {
 
     let productToUpdate = allProducts.find((aProd) => aProd.productId == querryId); //Get a reference of the object if it exists
 
-    const wrongParameters = validateBodyParams(req.body); //validate body
+    //validate body
+    const wrongParameters = validateBodyParams(req.body);
+    const typeMismatch = checkTypeMatch(req.body);
 
     if (wrongParameters.length > 0) {
         res.send(wrongParameters.join('\n'))
     }
+    else if (typeMismatch.length > 0) {
+        res.send(typeMismatch.join('\n'))
+    }
     else {
         if (productToUpdate) { //If the product exists
-
 
             if (updProduct) {
                 productToUpdate.product = updProduct;
@@ -135,3 +169,4 @@ export const updateAProduct = (req, res) => {
 
 
 }
+

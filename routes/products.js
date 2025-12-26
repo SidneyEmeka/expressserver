@@ -5,8 +5,8 @@ import { getAllProducts, addAProduct, getAProductById, deleteAProduct, updateAPr
 
 
 
-///CRUD///
 
+///ROUTES
 //Get all Products
 router.get('/all', getAllProducts);
 
