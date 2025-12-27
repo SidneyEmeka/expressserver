@@ -26,7 +26,7 @@ router.patch('/:id', updateAProduct)
 
 
 
-export default router; //so we can read it in Index.js
+export default router; //so we can read it in Index.js. PS: the default keyword is used so that you can noww import it anywhere with any name of choice. like it mmakes the impoort naame flexible
 
 
 

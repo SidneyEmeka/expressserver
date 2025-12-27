@@ -23,6 +23,6 @@ app.listen(PORT,()=>{
 
 //JUST SOMETHIHNG TO TEST YOUR SERVER,
 app.get('/health', (req, res) => {
-  res.send('Bad guy!!!, Your server is healthy');
+  res.status(200).send('Bad guy!!!, Your server is healthy');
 });
 

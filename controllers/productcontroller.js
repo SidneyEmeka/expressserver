@@ -21,7 +21,7 @@ function validateBodyParams(bodyTocheck) {
 
     for (let akey in bodyTocheck) {
         if (!validKeys.includes(akey)) {
-            errors.push(`Wrong Parameter: kindly crosscheck the key - ${akey}`)
+            errors.push(`kindly crosscheck the key - ${akey}`)
         }
     }
 
@@ -33,7 +33,7 @@ function checkMissingBodyParams(bodyToCheck) {
 
     for (let i = 0; i < validKeys.length; i++) {
         if (bodyToCheck[validKeys[i]] == undefined) {
-            errors.push(`Parameters Incomplete: The key - ${validKeys[i]} is missing`)
+            errors.push(`The key - ${validKeys[i]} is missing`)
         }
     }
 
@@ -64,7 +64,7 @@ function checkTypeMatch(bodyToCheck) {
 
 
 ///CRUD
-export const getAllProducts = (req, res) => { res.send(allProducts); }
+export const getAllProducts = (req, res) => { res.status(200).send({"message": allProducts.length>1?`There are ${allProducts.length} products`: `You have ${allProducts.length} product`, "data": allProducts}); }
 
 export const addAProduct = (req, res) => {
 
@@ -74,19 +74,18 @@ export const addAProduct = (req, res) => {
     const typeMismatch = checkTypeMatch(req.body);
 
     if (wrongParameters.length > 0) {
-        res.send(wrongParameters.join('\n'));
+        res.status(400).send({"message":"One or more of your keys are incorrect", "data" : wrongParameters});
     }
     else if (missingParammeters.length > 0) {
-        res.send(missingParammeters.join('\n'));
+        res.status(400).send({"message":"One or more of the required keys are missing", "data" : missingParammeters});
     }
     else if (typeMismatch.length > 0) {
-        res.send(typeMismatch.join('\n'));
+        res.status(400).send({"message":"One or more of the required values are of the wrong data type", "data" : typeMismatch});
     }
     else {
         let newProduct = { ...req.body, productId: uuidv4() }; //Using spread operator to include all static product details then a dynamic ID
         allProducts.push(newProduct); //pushing into in-memory database
-        res.send(`${newProduct.product} from ${newProduct.store} added successfully\nallProducts: ${JSON.stringify(allProducts)}`);
-
+       res.status(201).send({"message": `${newProduct.product} from ${newProduct.store} added successfully`, "data":allProducts});
     }
 
 }
@@ -95,9 +94,9 @@ export const getAProductById = (req, res) => { //notice how : is added in path, 
     let querryId = req.params.id;
     let theProduct = allProducts.find((aProd) => aProd.productId == querryId);
     if (theProduct) {
-        res.send(theProduct);
+        res.status(200).send({"message":"Product found", "data":theProduct})
     } else {
-        res.send(`Product with ID: ${querryId} not found`);
+        res.status(404).send({"message":"Product not found", "data":`Product with ID: ${querryId} not found`});
     }
 }
 
@@ -107,10 +106,10 @@ export const deleteAProduct = (req, res) => {
     if (productTodelete) {
         //splice the list or filter
         allProducts = allProducts.filter((aProduct) => aProduct.productId != querryId); //Returns all elements of the array that meets the condition then removes the one that doesn't meet it
-        res.send(`Product with ID: ${querryId} deleted successfully\nallProducts: ${JSON.stringify(allProducts)}`);
+        res.status(200).send({"message":`Product deleted successfully`, "data":allProducts});
     }
     else {
-        res.send(`Product with ID: ${querryId} not found`);
+        res.status(404).send({"message":"Product not deleted", "data":`Product with ID: ${querryId} not found`})
     }
 
 }
@@ -132,10 +131,12 @@ export const updateAProduct = (req, res) => {
     const typeMismatch = checkTypeMatch(req.body);
 
     if (wrongParameters.length > 0) {
-        res.send(wrongParameters.join('\n'))
+       res.status(400).send({"message":"One or more of your keys are incorrect", "data" : wrongParameters});
+
     }
     else if (typeMismatch.length > 0) {
-        res.send(typeMismatch.join('\n'))
+    res.status(400).send({"message":"One or more of the required values are of the wrong data type", "data" : typeMismatch});
+
     }
     else {
         if (productToUpdate) { //If the product exists
@@ -158,12 +159,12 @@ export const updateAProduct = (req, res) => {
             if (updIsStoreVerified !== undefined) {
                 productToUpdate.isStoreVerified = updIsStoreVerified;
             }
-            res.send(`Product with ID: ${querryId} updated successfully\nProduct: ${JSON.stringify(productToUpdate)}`);
+       res.status(200).send({"message": `Product updated successfully`, "data":productToUpdate});
 
 
         }
         else {
-            res.send(`Product with ID: ${querryId} not found`);
+            res.status(400).send({"message":`Product not updated`, "data":`Product with ID: ${querryId} not found`});
         }
     }
 
