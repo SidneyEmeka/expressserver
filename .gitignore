@@ -1,0 +1,44 @@
+# Node modules - MOST IMPORTANT
+node_modules/
+
+# Environment variables (sensitive data like API keys, passwords)
+.env
+.env.local
+.env.development
+.env.production
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System files
+.DS_Store        # MacOS
+Thumbs.db        # Windows
+*.swp            # Vim swap files
+
+# IDE/Editor folders
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Build/Distribution folders
+dist/
+build/
+out/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Package manager lock files 
+# package-lock.json
+# yarn.lock

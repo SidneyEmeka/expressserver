@@ -11,6 +11,7 @@ import productsRoutes from './routes/products.js';
 const app = express(); 
 const PORT = 2;
 
+//Middlewares
 app.use(bodyParser.json()); 
 app.use('/products', productsRoutes); //all routes mentioned here starts with /products
 
