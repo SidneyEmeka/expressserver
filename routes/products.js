@@ -3,22 +3,25 @@ import express from 'express';
 const router = express.Router(); //instatiating routes
 import { getAllProducts, addAProduct, getAProductById, deleteAProduct, updateAProduct }  from '../controllers/productcontroller.js';
 
+import { authenticateToken } from '../controllers/productcontroller.js';
+
+
 
 
 
 ///ROUTES
 //Get all Products
-router.get('/all', getAllProducts);
+router.get('/all',authenticateToken, getAllProducts);
 
 //Find a particcular producct by ID
-router.get('/:id', getAProductById
+router.get('/:id',authenticateToken, getAProductById
 );
 
 //Add a Product
-router.post('/addproduct', addAProduct)
+router.post('/addproduct',authenticateToken, addAProduct)
 
 //delete a product by ID
-router.delete('/:id', deleteAProduct)
+router.delete('/:id',authenticateToken, deleteAProduct)
 
 
 //Update a user by ID

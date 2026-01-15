@@ -24,7 +24,7 @@ npm install
 
 3. Run the server
 ```bash
-node index.js
+node app.js
 ```
 
 The server will start on `http://localhost:2`
@@ -62,21 +62,21 @@ curl -X POST http://localhost:2/products \
 - Body-parser
 
 ## Error Codes
-2xx - Success:
+- 2xx - Success:
 
-200 OK - Request succeeded (default for GET, PATCH, PUT)
-201 Created - Resource created successfully (POST)
-204 No Content - Success, but no data to return (DELETE)
+- 200 OK - Request succeeded (default for GET, PATCH, PUT)
+- 201 Created - Resource created successfully (POST)
+<!-- - 204 No Content - Success, but no data to return (DELETE) -->
 
-4xx - Client Errors:
+- 4xx - Client Errors:
 
-400 Bad Request - Invalid data sent by client
-401 Unauthorized - Authentication required
+- 400 Bad Request - Invalid data sent by client
+- 404 Not Found - Resource doesn't exist
+<!-- 401 Unauthorized - Authentication required
 403 Forbidden - Authenticated but not allowed
-404 Not Found - Resource doesn't exist
-409 Conflict - Conflict with existing data
+409 Conflict - Conflict with existing data -->
 
-5xx - Server Errors:
+<!-- 5xx - Server Errors:
 
 500 Internal Server Error - Something broke on server
-503 Service Unavailable - Server temporarily down
+503 Service Unavailable - Server temporarily down -->

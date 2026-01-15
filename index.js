@@ -6,6 +6,7 @@ import bodyParser from 'body-parser'; //To take incoming post request bodies
 
 ///Other Routes
 import productsRoutes from './routes/products.js';
+import userRoutes from './routes/user.js';
 
 
 const app = express(); 
@@ -14,6 +15,7 @@ const PORT = 2;
 //Middlewares
 app.use(bodyParser.json()); 
 app.use('/products', productsRoutes); //all routes mentioned here starts with /products
+app.use('/users', userRoutes); //all routes here starts with /users
 
 app.listen(PORT,()=>{
     console.log(`We are deployed on http://localhost:${PORT}`);

@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid' //to generate unique IDs
+import jwt from 'jsonwebtoken';
+
 
 
 let allProducts = [
@@ -64,9 +66,9 @@ function checkTypeMatch(bodyToCheck) {
 
 
 ///CRUD
-export const getAllProducts = (req, res) => { res.status(200).send({"message": allProducts.length>1?`There are ${allProducts.length} products`: `You have ${allProducts.length} product`, "data": allProducts}); }
+export const getAllProducts =  (req, res) => { res.status(200).send({"message": allProducts.length>1?`There are ${allProducts.length} products`: `You have ${allProducts.length} product`, "data": allProducts}); }
 
-export const addAProduct = (req, res) => {
+export const addAProduct =  (req, res) => {
 
     //validate the body
     const wrongParameters = validateBodyParams(req.body);
@@ -167,6 +169,42 @@ export const updateAProduct = (req, res) => {
             res.status(400).send({"message":`Product not updated`, "data":`Product with ID: ${querryId} not found`});
         }
     }
+
+
+}
+
+
+
+//GenerateTokens
+export const generateAccessToken = (user) => {
+    return jwt.sign(user, process.env.ACCESS_WEB_TOKEN_SECRET, {expiresIn: "15s"});
+}
+
+export const allRefreshTokens = [];
+export const generateRefreshsToken = (user) => {
+    const rToken =jwt.sign(user, process.env.REFRESH_WEB_TOKEN_SECRET);
+    allRefreshTokens.push(rToken);
+    return rToken;
+
+} 
+
+//Middlewares
+export const authenticateToken = (req,res, next) => {
+const authHeader = req.headers['authorization'];
+if(authHeader){
+    const theToken = authHeader.split(' ')[1]; //get token position
+    console.log(theToken);
+     console.log(authHeader);
+    jwt.verify(theToken, process.env.ACCESS_WEB_TOKEN_SECRET, (err, foundUser)=>{
+        if(err) {return res.status(403).send({"message":`Invalid Token`, "data":`Kindly use an Correct Token`})}
+        console.log(foundUser);
+        req.foundUser = foundUser;
+        next();
+    })
+}
+else{
+   res.status(400).send({"message":`Requires Token`, "data":`Kindly use an Authorization Token`});
+}
 
 
 }
