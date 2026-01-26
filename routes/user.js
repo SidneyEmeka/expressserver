@@ -3,6 +3,7 @@ const userRoutes = express.Router(); //instatiating routes
 import bcrypt from 'bcrypt';
 import 'dotenv/config'
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { allRefreshTokens, authenticateToken, generateAccessToken, generateRefreshsToken } from '../controllers/productcontroller.js';
 
 
