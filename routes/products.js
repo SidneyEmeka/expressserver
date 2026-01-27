@@ -5,6 +5,8 @@ import { getAllProducts, addAProduct, getAProductById, deleteAProduct, updateAPr
 
 import { authenticateToken } from '../controllers/productcontroller.js';
 
+import { upload, handleMulterError } from '../middlewares/imageuploadmiddleware.js';
+
 
 
 
@@ -18,7 +20,7 @@ router.get('/:id',authenticateToken, getAProductById
 );
 
 //Add a Product
-router.post('/addproduct',authenticateToken, addAProduct)
+router.post('/addproduct',upload.single('image'), addAProduct)
 
 //delete a product by ID
 router.delete('/:id',authenticateToken, deleteAProduct)

@@ -1,260 +1,274 @@
-import { v4 as uuidv4 } from 'uuid' //to generate unique IDs
+import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
-import { Product } from '../models/productschema.js'
-import e from 'express';
+import { Product } from '../models/productschema.js';
+import CloudinaryService from '../configs/cloudinaryconfig.js';
 
+///CRUD OPERATIONS WITH IMAGE UPLOAD
 
-let allProducts = [
-    {
-        product: "Mouse",
-        price: 8500,
-        store: "Sidswipe Gadgets",
-        quantity: 60,
-        isStoreVerified: false,
-        productId: uuidv4()
-    },
-]; //Just in memory database for all products
-
-
-///VALIDATIONS
-const validKeys = ['product', 'price', 'store', 'quantity', 'isStoreVerified']
-
-function validateBodyParams(bodyTocheck) {
-    const errors = [];
-
-    for (let akey in bodyTocheck) {
-        if (!validKeys.includes(akey)) {
-            errors.push(`kindly crosscheck the key - ${akey}`)
-        }
-    }
-
-    return errors;
-}
-
-function checkMissingBodyParams(bodyToCheck) {
-    const errors = [];
-
-    for (let i = 0; i < validKeys.length; i++) {
-        if (bodyToCheck[validKeys[i]] == undefined) {
-            errors.push(`The key - ${validKeys[i]} is missing`)
-        }
-    }
-
-    return errors;
-}
-
-function checkTypeMatch(bodyToCheck) {
-    const errors = [];
-
-    if (bodyToCheck["product"] !== undefined && typeof bodyToCheck["product"] !== 'string') {
-        errors.push(`Product Must be a string`)
-    }
-    if (bodyToCheck["price"] !== undefined && typeof bodyToCheck["price"] !== 'number') {
-        errors.push(`Price Must be a number`)
-    }
-    if (bodyToCheck["store"] !== undefined && typeof bodyToCheck["store"] !== 'string') {
-        errors.push(`Store Must be a string`)
-    }
-    if (bodyToCheck["quantity"] !== undefined && typeof bodyToCheck["quantity"] !== 'number') {
-        errors.push(`Quantity Must be a number`)
-    }
-    if (bodyToCheck["isStoreVerified"] !== undefined && typeof bodyToCheck["isStoreVerified"] !== 'boolean') {
-        errors.push(`isStoreVerified Must be a boolean`)
-    }
-
-    return errors;
-}
-
-
-///CRUD
-export const getAllProducts =  async (req, res) => { 
-    try{
-         const product = Product;
-         const allProducts = await product.find();
-             res.status(200).send({"message": allProducts.length>1?`There are ${allProducts.length} products`: `You have ${allProducts.length} product`, "data": allProducts}); 
-
-    }catch(err){
-                res.status(400).send({"message":"Products not found", "data" : err.message})
-
-    }
-
-}
-
-export const addAProduct =  async (req, res) => {
-   // const product = require('../models/productschema');
-   const product = Product;
-   console.log(req.body)
+/**
+ * @desc    Get all products
+ * @route   GET /api/products
+ * @access  Public
+ */
+export const getAllProducts = async (req, res) => { 
     try {
-        const theProduct = new product(req.body);
+        const allProducts = await Product.find();
+        res.status(200).send({
+            "message": allProducts.length > 1 ? `There are ${allProducts.length} products` : `You have ${allProducts.length} product`, 
+            "data": allProducts
+        }); 
+    } catch (err) {
+        res.status(400).send({
+            "message": "Products not found", 
+            "data": err.message
+        });
+    }
+}
+
+/**
+ * @desc    Add a new product with optional image upload
+ * @route   POST /api/products
+ * @access  Public
+ */
+export const addAProduct = async (req, res) => {
+    console.log('📦 Adding new product...');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+
+    try {
+        // Parse data from form-data (all come as strings)
+        const productData = {
+            name: req.body.name,
+            price: parseFloat(req.body.price),
+            store: req.body.store,
+            quantity: parseInt(req.body.quantity),
+        };
+
+        // Validate required fields
+        if (!productData.name || !productData.price || !productData.store || productData.quantity === undefined) {
+            return res.status(400).send({
+                "message": "Missing required fields",
+                "data": "name, price, store, and quantity are required"
+            });
+        }
+
+        // Handle image upload if file exists
+        if (req.file) {
+            console.log('📸 Uploading image to Cloudinary...');
+            
+            try {
+                const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, 'products');
+                productData.imageUrl = uploadResult.url;
+                productData.cloudinaryPublicId = uploadResult.publicId;
+                
+                console.log('✅ Image uploaded successfully:', uploadResult.url);
+            } catch (uploadError) {
+                console.error('❌ Image upload failed:', uploadError);
+                return res.status(400).send({
+                    "message": "Failed to upload image",
+                    "data": uploadError.message
+                });
+            }
+        }
+
+        // Create and save product
+        const theProduct = new Product(productData);
         await theProduct.save();
-               res.status(201).send({"message": `${theProduct.name} from ${theProduct.store} added successfully`, "data":theProduct});
 
-    } catch(error){
-        res.status(500).send({"message":"Product not added", "data" : error.message})
+        res.status(201).send({
+            "message": `${theProduct.name} from ${theProduct.store} added successfully`,
+            "data": theProduct
+        });
+
+    } catch (error) {
+        console.error('❌ Error adding product:', error);
+        res.status(500).send({
+            "message": "Product not added",
+            "data": error.message
+        });
     }
-
-
-
-    ///In-Memory
-    //
-    //validate the body
-    // const wrongParameters = validateBodyParams(req.body);
-    // const missingParammeters = checkMissingBodyParams(req.body);
-    // const typeMismatch = checkTypeMatch(req.body);
-
-    // if (wrongParameters.length > 0) {
-    //     res.status(400).send({"message":"One or more of your keys are incorrect", "data" : wrongParameters});
-    // }
-    // else if (missingParammeters.length > 0) {
-    //     res.status(400).send({"message":"One or more of the required keys are missing", "data" : missingParammeters});
-    // }
-    // else if (typeMismatch.length > 0) {
-    //     res.status(400).send({"message":"One or more of the required values are of the wrong data type", "data" : typeMismatch});
-    // }
-    // else {
-    //     let newProduct = { ...req.body, productId: uuidv4() }; //Using spread operator to include all static product details then a dynamic ID
-    //     allProducts.push(newProduct); //pushing into in-memory database
-    //    res.status(201).send({"message": `${newProduct.product} from ${newProduct.store} added successfully`, "data":allProducts});
-    // }
-
 }
 
-export const getAProductById = async (req, res) => { //notice how : is added in path, thats so we can pass anything there which we will collect as ID
+/**
+ * @desc    Get a single product by ID
+ * @route   GET /api/products/:id
+ * @access  Public
+ */
+export const getAProductById = async (req, res) => {
     let querryId = req.params.id;
-    try{
-         const product = Product;
-             let theProduct = await product.findById(querryId);
- if (theProduct) {
-        res.status(200).send({"message":"Product found", "data":theProduct})
-    } else {
-        res.status(404).send({"message":"Product not found", "data":`Product with ID: ${querryId} not found`});
-    }
-    }catch(err){
-                res.status(500).send({"message":"Product not found", "data" : err.message})
-
+    try {
+        let theProduct = await Product.findById(querryId);
+        
+        if (theProduct) {
+            res.status(200).send({
+                "message": "Product found", 
+                "data": theProduct
+            });
+        } else {
+            res.status(404).send({
+                "message": "Product not found", 
+                "data": `Product with ID: ${querryId} not found`
+            });
+        }
+    } catch (err) {
+        res.status(500).send({
+            "message": "Product not found", 
+            "data": err.message
+        });
     }
 }
 
-export const deleteAProduct = async(req, res) => {
+/**
+ * @desc    Delete a product and its image from Cloudinary
+ * @route   DELETE /api/products/:id
+ * @access  Public
+ */
+export const deleteAProduct = async (req, res) => {
     let querryId = req.params.id;
-    try{
-         const product = Product;
-             let theProduct = await product.findByIdAndDelete(querryId);
- if (theProduct) {
-        res.status(200).send({"message":"Product deleted", "data":theProduct})
-    } else {
-        res.status(404).send({"message":"Product not deleted", "data":`Product with ID: ${querryId} not found`});
-    }
-    }catch(err){
-                res.status(500).send({"message":"Product not found", "data" : err.message})
+    try {
+        // First, find the product to get the cloudinary public ID
+        let theProduct = await Product.findById(querryId);
+        
+        if (!theProduct) {
+            return res.status(404).send({
+                "message": "Product not found", 
+                "data": `Product with ID: ${querryId} not found`
+            });
+        }
 
-    }
+        // Delete image from Cloudinary if exists
+        if (theProduct.cloudinaryPublicId) {
+            console.log('🗑️  Deleting image from Cloudinary...');
+            try {
+                await CloudinaryService.deleteImage(theProduct.cloudinaryPublicId);
+                console.log('✅ Image deleted from Cloudinary');
+            } catch (deleteError) {
+                console.error('⚠️  Warning: Failed to delete image from Cloudinary:', deleteError);
+                // Continue with product deletion even if image deletion fails
+            }
+        }
 
+        // Delete product from database
+        await Product.findByIdAndDelete(querryId);
+        
+        res.status(200).send({
+            "message": "Product deleted", 
+            "data": theProduct
+        });
+    } catch (err) {
+        res.status(500).send({
+            "message": "Product not deleted", 
+            "data": err.message
+        });
+    }
 }
 
+/**
+ * @desc    Update a product with optional new image
+ * @route   PUT /api/products/:id
+ * @access  Public
+ */
 export const updateAProduct = async (req, res) => {
     let querryId = req.params.id;
-     const product = Product;
-    try{
-        const theProduct = await product.findByIdAndUpdate(querryId,req.body)
-        if (theProduct) {
-        res.status(200).send({"message":"Product updated", "data":theProduct})
-    } else {
-        res.status(404).send({"message":"Product not updated", "data":`Product with ID: ${querryId} not found`});
-    }
-    }catch(error){
-        res.status(500).send({"message":"Product not updated", "data" : error.message})
-    }
-
-    // In-memory
     
-    //extract any passed data that requires change
-    // const updProduct = req.body.product;
-    // const updPrice = req.body.price;
-    // const updStore = req.body.store;
-    // const updQuantity = req.body.quantity;
-    // const updIsStoreVerified = req.body.isStoreVerified;
+    console.log('📝 Updating product...');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+    
+    try {
+        // Find existing product
+        let product = await Product.findById(querryId);
+        
+        if (!product) {
+            return res.status(404).send({
+                "message": "Product not found", 
+                "data": `Product with ID: ${querryId} not found`
+            });
+        }
 
-    // let productToUpdate = allProducts.find((aProd) => aProd.productId == querryId); //Get a reference of the object if it exists
+        // Update basic fields (convert types properly from form-data strings)
+        if (req.body.name) product.name = req.body.name;
+        if (req.body.price) product.price = parseFloat(req.body.price);
+        if (req.body.store) product.store = req.body.store;
+        if (req.body.quantity !== undefined) product.quantity = parseInt(req.body.quantity);
 
-    // //validate body
-    // const wrongParameters = validateBodyParams(req.body);
-    // const typeMismatch = checkTypeMatch(req.body);
+        // Handle new image upload
+        if (req.file) {
+            console.log('📸 Uploading new image to Cloudinary...');
+            
+            try {
+                // Delete old image if exists
+                if (product.cloudinaryPublicId) {
+                    console.log('🗑️  Deleting old image from Cloudinary...');
+                    await CloudinaryService.deleteImage(product.cloudinaryPublicId);
+                }
+                
+                // Upload new image
+                const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, 'products');
+                product.imageUrl = uploadResult.url;
+                product.cloudinaryPublicId = uploadResult.publicId;
+                
+                console.log('✅ New image uploaded successfully');
+            } catch (uploadError) {
+                console.error('❌ Image upload failed:', uploadError);
+                return res.status(400).send({
+                    "message": "Failed to upload new image",
+                    "data": uploadError.message
+                });
+            }
+        }
 
-    // if (wrongParameters.length > 0) {
-    //    res.status(400).send({"message":"One or more of your keys are incorrect", "data" : wrongParameters});
+        // Save updated product
+        await product.save();
 
-    // }
-    // else if (typeMismatch.length > 0) {
-    // res.status(400).send({"message":"One or more of the required values are of the wrong data type", "data" : typeMismatch});
-
-    // }
-    // else {
-    //     if (productToUpdate) { //If the product exists
-
-    //         if (updProduct) {
-    //             productToUpdate.product = updProduct;
-    //         }
-
-    //         if (updPrice) {
-    //             productToUpdate.price = updPrice;
-    //         }
-
-    //         if (updStore) {
-    //             productToUpdate.store = updStore;
-    //         }
-
-    //         if (updQuantity) {
-    //             productToUpdate.quantity = updQuantity;
-    //         }
-    //         if (updIsStoreVerified !== undefined) {
-    //             productToUpdate.isStoreVerified = updIsStoreVerified;
-    //         }
-    //    res.status(200).send({"message": `Product updated successfully`, "data":productToUpdate});
-
-
-    //     }
-    //     else {
-    //         res.status(400).send({"message":`Product not updated`, "data":`Product with ID: ${querryId} not found`});
-    //     }
-    // }
-
-
+        res.status(200).send({
+            "message": "Product updated", 
+            "data": product
+        });
+    } catch (error) {
+        console.error('❌ Error updating product:', error);
+        res.status(500).send({
+            "message": "Product not updated", 
+            "data": error.message
+        });
+    }
 }
 
-
-
-//GenerateTokens
+// JWT Token generation (your existing functions)
 export const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.ACCESS_WEB_TOKEN_SECRET, {expiresIn: "15m"});
+    return jwt.sign(user, process.env.ACCESS_WEB_TOKEN_SECRET, { expiresIn: "15m" });
 }
 
 export const allRefreshTokens = [];
 export const generateRefreshsToken = (user) => {
-    const rToken =jwt.sign(user, process.env.REFRESH_WEB_TOKEN_SECRET);
+    const rToken = jwt.sign(user, process.env.REFRESH_WEB_TOKEN_SECRET);
     allRefreshTokens.push(rToken);
     return rToken;
-
-} 
-
-//Middlewares
-export const authenticateToken = (req,res, next) => {
-const authHeader = req.headers['authorization'];
-if(authHeader){
-    const theToken = authHeader.split(' ')[1]; //get token position
-    console.log(`The splitted ${theToken}`);
-     console.log(authHeader);
-    jwt.verify(theToken, process.env.ACCESS_WEB_TOKEN_SECRET, (err, foundUser)=>{
-        if(err) {return res.status(403).send({"message":`Invalid Token`, "data":`Kindly use an Correct Token ${err}`})}
-        console.log(foundUser);
-        req.foundUser = foundUser;
-        next();
-    })
-}
-else{
-   res.status(400).send({"message":`Requires Token`, "data":`Kindly use an Authorization Token`});
 }
 
-
+// Middleware (your existing middleware)
+export const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+        const theToken = authHeader.split(' ')[1];
+        console.log(`The token: ${theToken}`);
+        console.log(authHeader);
+        
+        jwt.verify(theToken, process.env.ACCESS_WEB_TOKEN_SECRET, (err, foundUser) => {
+            if (err) {
+                return res.status(403).send({
+                    "message": `Invalid Token`, 
+                    "data": `Kindly use a correct token: ${err}`
+                });
+            }
+            console.log(foundUser);
+            req.foundUser = foundUser;
+            next();
+        });
+    } else {
+        res.status(400).send({
+            "message": `Requires Token`, 
+            "data": `Kindly use an Authorization Token`
+        });
+    }
 }
-

@@ -18,6 +18,14 @@ const productSchema = mongoose.Schema(
       type: String,
       required: [true, "Product store is required"],
     },
+    imgUrl: {
+      type: String,
+      required: [true, "Product img is required"],
+    },
+    cloudinaryPublicId: {
+      type: String,
+      required: [true, "Product img is required"],
+    },
     quantity: {
       type: Number,
       required: [true, "Product available quantity is required"],
