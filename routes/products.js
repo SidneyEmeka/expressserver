@@ -20,7 +20,7 @@ router.get('/:id',authenticateToken, getAProductById
 );
 
 //Add a Product
-router.post('/addproduct',upload.single('image'), addAProduct)
+router.post('/addproduct',authenticateToken,upload.single('image'),addAProduct)
 
 //delete a product by ID
 router.delete('/:id',authenticateToken, deleteAProduct)
