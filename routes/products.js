@@ -5,7 +5,7 @@ import { getAllProducts, addAProduct, getAProductById, deleteAProduct, updateAPr
 
 import { authenticateToken } from '../controllers/productcontroller.js';
 
-import { upload, handleMulterError } from '../middlewares/imageuploadmiddleware.js';
+import { upload }  from '../middlewares/imageuploadmiddleware.js';
 
 
 

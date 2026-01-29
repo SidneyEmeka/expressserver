@@ -25,43 +25,39 @@ export const getAllProducts = async (req, res) => {
     }
 }
 
-/**
- * @desc    Add a new product with optional image upload
- * @route   POST /api/products
- * @access  Public
- */
+
 export const addAProduct = async (req, res) => {
     console.log('📦 Adding new product...');
     console.log('Body:', req.body);
     console.log('File:', req.file);
 
     try {
-        // Parse data from form-data (all come as strings)
-        const productData = {
-            name: req.body.name,
-            price: parseFloat(req.body.price),
-            store: req.body.store,
-            quantity: parseInt(req.body.quantity),
-        };
-
-        // Validate required fields
-        if (!productData.name || !productData.price || !productData.store || productData.quantity === undefined) {
-            return res.status(400).send({
-                "message": "Missing required fields",
-                "data": "name, price, store, and quantity are required"
-            });
-        }
-
-        // Handle image upload if file exists
         if (req.file) {
             console.log('📸 Uploading image to Cloudinary...');
             
             try {
-                const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, 'products');
-                productData.imageUrl = uploadResult.url;
-                productData.cloudinaryPublicId = uploadResult.publicId;
-                
-                console.log('✅ Image uploaded successfully:', uploadResult.url);
+                const uploadResult = await CloudinaryService.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {folder: 'products'});
+      console.log(uploadResult);
+                let productData = {
+            name : req.body.name,
+  description: req.body.description,
+  price: req.body.price,
+  store: req.body.store,
+  quantity: req.body.quantity,
+  imgUrl: uploadResult.secure_url,
+  cloudinaryPublicId:uploadResult.public_id
+        };
+                console.log('✅ Image uploaded successfully:', productData);
+                 
+        // Create and save product
+       const theProduct = new Product(productData);
+        await theProduct.save();
+
+        res.status(201).send({
+            "message": `${theProduct.name} from ${theProduct.store} added successfully`,
+            "data": theProduct
+        });
+
             } catch (uploadError) {
                 console.error('❌ Image upload failed:', uploadError);
                 return res.status(400).send({
@@ -70,16 +66,6 @@ export const addAProduct = async (req, res) => {
                 });
             }
         }
-
-        // Create and save product
-        const theProduct = new Product(productData);
-        await theProduct.save();
-
-        res.status(201).send({
-            "message": `${theProduct.name} from ${theProduct.store} added successfully`,
-            "data": theProduct
-        });
-
     } catch (error) {
         console.error('❌ Error adding product:', error);
         res.status(500).send({
@@ -89,11 +75,7 @@ export const addAProduct = async (req, res) => {
     }
 }
 
-/**
- * @desc    Get a single product by ID
- * @route   GET /api/products/:id
- * @access  Public
- */
+
 export const getAProductById = async (req, res) => {
     let querryId = req.params.id;
     try {
